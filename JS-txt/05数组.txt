@@ -1,0 +1,191 @@
+数组也是一个对象，用于存储一些值。不同的是：普通对象使用字符串作属性名，而数组使用数字作为索引操作元素，索引从0开始；数组的储存性能比普通对象好
+var arr = new Array(); //创建数组对象
+console.log(typeof arr); //"object"
+arr[0] = 10; //给数组中元素赋值
+arr[1] = 20;
+arr[2] = 30;
+console.log(arr); //(3) [10, 20, 30]  表示有3个元素，值为10 20 30
+console.log(arr[0]); //10
+console.log(arr[3]); //读取不存在的索引，不报错，而是返回undefined
+console.log(arr.length); //使用length属性获取数组中元素个数
+arr[10] = 110;
+console.log(arr.length); //11  对非连续数组，length会获取数组最大的索引+1
+console.log(arr); //(11) [10, 20, 30, 空 ×7, 110]
+
+修改length：如果修改的length大于原长度，则多余的部分为空；小于原长度，则多余部分被删除
+arr.length = 5;
+console.log(arr); //(5) [10, 20, 30, 空 ×2]
+arr.length = 2;
+console.log(arr); //(2) [10, 20]
+
+向数组最后一个位置添加元素
+arr[arr.length] = 40;
+arr[arr.length] = 50;
+
+var arr = []; //使用字面量创建数组
+var arr = [1,2,3]; //使用字面量创建数组时可以同时指定数组中元素
+var arr =new Array(10,20,30); //使用构造函数创建数组时也可以同时添加元素
+区别：
+var arr=[10]; //创建一个只有元素10的数组
+var arr =new Array(10); //创建一个长度为10的数组
+
+数组中的元素可以是任意的数据类型（包括对象、函数、数组），同一数组中不同位置的元素类型可以不同
+var arr = [[1,2,3],[10,20,30]]; //二维数组
+
+数组的4个常用增删元素方法：
+1、push()  向数组末尾添加1个或多个元素，返回数组新的长度
+var arr = [1, 2, 3];
+var res = arr.push(4, 5);
+console.log(arr);  //(5) [1,2,3,4,5]
+console.log(res);  //5
+2、pop()  删除数组的最后一个元素，并将删去的那个元素返回
+var arr = [1, 2, 3];
+var res = arr.pop();
+console.log(arr);  //(2) [1,2]
+console.log(res);  //3
+3、unshift()  向数组开头添加1个或多个元素，返回数组新的长度
+var arr = [1, 2, 3];
+var res = arr.unshift(-1, 0);
+console.log(arr);  //(5) [-1,0,1,2,3]
+console.log(res);  //5
+4、shift()  删除数组的第一个元素，并将删去的那个元素返回
+var arr = [1, 2, 3];
+var res = arr.shift();
+console.log(arr);  //(2) [2,3]
+console.log(res);  //1
+
+数组的遍历：
+第一种方法：正常for循环
+var arr = [1, 2, 3];
+for (var i = 0; i < arr.length; i++) {
+    console.log(arr[i]);
+}
+例：将age不同的Person对象存入数组中，获取age>=18的person对象
+function Person(name, age) {
+    this.name = name;
+    this.age = age;
+}
+var person = [new Person("p1", 18), new Person("p2", 10), new Person("p3", 19), new Person("p4", 30), new Person("p5", 1)];
+function get_adult(arr) {
+    var new_arr = []; //创建结果数组
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].age >= 18) { //进行条件判断
+            new_arr.push(arr[i]);
+        }
+    }
+    return new_arr;
+}
+var adult = get_adult(person);
+第二种方法：forEach()  这个方法只支持IE8以上的浏览器
+该方法需要一个函数作为参数，像这种由我们创建但不由我们调用的函数 称为回调函数
+数组中有几个元素，函数就执行几次，每次执行时，浏览器会将遍历到的元素以实参形式传递进函数中
+浏览器会传递进回调函数3个参数：当前正在遍历的元素值、当前正在遍历的元素索引、正在遍历的数组对象
+var arr = ["a", "b", "c"];
+arr.forEach(function (value, index, obj) {
+    console.log("arr[" + index + "]=" + value); //arr[0]=a  arr[1]=b  arr[2]=c
+    console.log(obj);  //(3) ['a', 'b', 'c']
+});
+
+数组的其它常用方法：
+1、slice(start,end)  从数组中提取指定元素（切片），提取[start,end)索引的元素，end参数可省略，默认一直取到数组结尾；注意这个方法不会改变原数组，而是将切片后新数组返回
+var arr = [0, 1, 2, 3, 4, 5];
+var res = arr.slice(1, 3);
+console.log(res); //(2) [1, 2]
+res = arr.slice(2);
+console.log(res); //(4) [2, 3, 4, 5]
+传递的索引也可以是负值，-n代表倒数第n个元素
+console.log(arr.slice(0, -1)); //(5) [0, 1, 2, 3, 4]
+console.log(arr.slice(-1, -4)); //[]空数组，注意slice只能正向切片，无法从后往前输出元素
+console.log(arr.slice(-4, -1)); //(3) [2, 3, 4]
+console.log(arr.slice(-2)); //(2) [4, 5]
+2、splice(start,number)  删除数组中指定元素，从索引为start的元素开始删number个元素，传递的索引也可以为负数；注意这个方法直接改变原数组，将被删除的元素返回
+var arr = [0, 1, 2, 3, 4, 5];
+var res = arr.splice(1, 2); //从arr[1]开始删除2个元素，arr[1]也算其中1个
+console.log(res); //(2) [1, 2]
+console.log(arr); //(4) [0, 3, 4, 5]
+该方法不仅可以用来删除元素，还可以进行替换
+var arr = [0, 1, 2, 3, 4, 5];
+var res = arr.splice(1, 1, "new_num1", "new_num2"); //将"new_num1", "new_num2"替换到a[1]位置，注意替换后元素个数可以大于替换前个数
+console.log(res); //[1]
+console.log(arr); //(7) [0, 'new_num1', 'new_num2', 2, 3, 4, 5]
+还可以用来在指定位置插入元素
+var arr = [0, 1, 2];
+var res = arr.splice(1, 0, "new_num1", "new_num2"); //在a[1]的位置插入"new_num1", "new_num2"，不进行删除或替换
+console.log(res); //[]
+console.log(arr); //(5) [0, 'new_num1', 'new_num2', 1, 2]
+
+数组的去重：
+function array_unique(arr) {
+    for (var i = 0; i < arr.length; i++) //将arr[i]之后的数依次与它比较，若相等就删掉那个数
+    {
+        for (var j = i + 1; j < arr.length; j++) {
+            if (arr[i] == arr[j]) {
+                arr.splice(j, 1);
+                j--; //注意删去之后要把j--，要不如果两个重复的数连着一起，第一个删完后，j指向第二个数，循环++后j就会跳过第二个数
+            }
+        }
+    }
+}
+array_unique(arr);
+
+利用splice生成随机不重复数组
+设生成长度为3的不重复数组，元素在[0,4]范围内：
+let range = [0, 1, 2, 3, 4]; //元素范围（可能取值）
+let res = [];
+for (let i = 0; i < 3; i++) {
+    let random_index = Math.floor(Math.random() * range.length);
+    res.push(range[random_index]); //将随机数添加到结果中
+    range.splice(random_index, 1); //将该数从可能取值中删除
+}
+console.log(res);
+
+数组的其它方法
+1、concat()  连接两个及以上数组，返回新数组；注意该方法不会改变原数组
+var a1 = [1, 2, 3];
+var a2 = [10, 20, 30];
+var a3 = [100, 200, 300];
+var res = a1.concat(a2, a3);
+console.log(res); //(9) [1, 2, 3, 10, 20, 30, 100, 200, 300]    
+不仅可以合并数组，还可以添加元素
+var a1 = [1, 2, 3];
+var a2 = [10, 20, 30];
+var res = a1.concat(a2, 100, 200, 300);
+console.log(res); //(9) [1, 2, 3, 10, 20, 30, 100, 200, 300]    
+2、join(seq)  可以将数组转换为字符串，以seq为分隔符，默认为逗号；注意该方法不会改变原数组
+var a1 = [1, 2, 3];
+var res = a1.join()
+console.log(res); //1,2,3
+res = a1.join("|");
+console.log(res); //1|2|3
+res = a1.join("");
+console.log(res); //123
+3、reverse()   反转数组；注意该方法会直接改变原数组
+var a1 = [1, 2, 3, 4];
+a1.reverse();
+console.log(a1); //(4) [4, 3, 2, 1]
+4、sort()  对数组元素排序，默认按照Unicode编码从小到大排序；即使对于纯数字数组，使用sort()默认也是按编码排，可能得到错误结果（如11<2<3<4）；注意该方法会直接改变原数组
+var letters = ["a", "e", "c", "a", "b"];
+var number = [11, 3, 2, 6, 5, 4];
+letters.sort();
+number.sort();
+console.log(letters); //(5) ['a', 'a', 'b', 'c', 'e']
+console.log(number); //(6) [11, 2, 3, 4, 5, 6]
+我们可以自己指定排序规则：在sort中添加回调函数，在函数中需定义两个形参，浏览器将会分别使用数组中元素作为实参调用回调函数，并根据回调函数返回值决定因素顺序：若返回大于0的值，则元素会交换位置；返回<=0的值不换位置
+var number = [11, 3, 2, 6, 5, 4];
+number.sort(function (a, b) { 
+    if (a > b) { 
+        return 1;
+    }
+    else if (a < b) {
+        return -1;
+    }
+    else {
+        return 0;
+    }
+});
+console.log(number); //(6) [2, 3, 4, 5, 6, 11]
+调换上面if与elseif中返回值，就可以实现从大到小排列
+一种更简便的方法：
+number.sort(function (a, b) {
+    return a - b;
+});

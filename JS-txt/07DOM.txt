@@ -1,0 +1,206 @@
+对于不变的量，尽量使用const声明为常量
+
+DOM对象：浏览器根据HTML标签生成的js对象，包括所有的标签属性；document对象：是DOM里提供的对象，用来访问和操作页面内容，网页的所有内容都在其中
+节点--构成HTML文档最基本单元，分为4类：文档节点--整个HTML文档、元素节点--HTML文档中的标签、属性节点--元素的属性、文本节点--HTML标签中文本内容
+浏览器已经为我们提供了文档节点这个对象，这个对象是window属性，可以在页面中直接使用，文档节点代表整个网页
+一个简单的例子：
+<body>
+    <button id="btn">一个按钮</button>
+    <script>
+        var btn = document.getElementById("btn");
+        console.log(btn); //<button id="btn">一个按钮</button>
+        btn.innerHTML = "a button"; //修改按钮的文字
+    </script>
+</body>
+
+事件：用户和浏览器之间的交互行为，如点击按钮、鼠标移动、关闭窗口等等
+可以在事件对应的属性中设置js代码，当事件被触发时，这些代码会被执行
+一个简单的例子：
+<body>
+    <button id="btn" onclick="alert('点击了按钮');">一个按钮</button>
+</body>
+这种写法将结构和行为耦合，不方便维护。可以为按钮的对应事件绑定处理函数来响应事件：
+<body>
+    <button id="btn">一个按钮</button>
+    <script>
+        var btn = document.getElementById("btn");
+        btn.onclick = function(){
+            alert("点击了按钮");
+        }; //一个回调函数，当对应事件被触发时执行
+    </script>
+</body>
+注意：浏览器加载页面时，按照自上而下执行代码。如果将<script>标签写到<body>上面，在代码执行时，页面还没加载（元素没被创建），代码无法获取到元素，可能会发生错误。因此一般都将<script>标签写到<body>下面
+onload事件：在整个页面加载完成后触发，用此事件可以将<script>标签写到任意位置而不报错
+<script>
+    window.onload = function () {
+        var btn = document.getElementById("btn");
+        btn.onclick = function () {
+            alert("点击了按钮");
+        };
+    }; //将要执行的js代码写到onload里
+</script>
+<body>
+    <button id="btn">一个按钮</button>
+</body>
+
+
+1、获取DOM对象
+（1）根据CSS选择器：
+document.querySelector("CSS选择器")
+const box = document.querySelector('div'); //选择第一个div标签，若没有选择到则返回null
+box可以直接进行修改
+document.querySelectorAll("CSS选择器")
+const boxs = document.querySelectorAll('div'); //选择所有的div标签，以NodeList伪数组的形式返回
+NodeList：有长度和索引，但没有pop和push等方法，可以进行用与数组相同的方法进行遍历操作
+（2）get系列方法：
+document.getElementById('a'); //获取第一个id为a的元素
+document.getElementsByClassName('a'); //获取页面中所有类名为a的元素
+document.getElementsByTagName('div'); //获取页面中所有div标签元素
+
+2、操作元素内容
+（1）对象.innerText属性
+console.log(box.innerText); //获取文字内容
+box.innerText = "修改box里面的内容"; //直接进行修改
+注意该属性只操作于纯文本，不会解析HTML标签，如<strong>等
+（2）对象.innerHTML属性
+该属性会解析HTML标签
+<div class="box">内容</div>
+<script>
+    const box = document.querySelector('.box');
+    console.log(box.innerHTML); //内容
+    box.innerHTML = "<strong>更改内容</strong>"; //会发现有加粗的效果
+</script>
+
+3、操作元素属性
+（1）常用属性href title src等
+语法：对象.属性 = 值
+const img = document.querySelector('img');
+img.src = "new.png";
+img.title = "新图片";
+页面刷新时随机更换图片：（页面刷新时随机数就直接生成了，无需捕捉刷新的事件）
+const img = document.querySelector('img');
+const max = 6, min = 1;
+const random = Math.floor(Math.random() * (max - min + 1) + min);
+img.src = `${random}.png`;
+（2）样式属性
+--通过style修改  语法：对象.style.样式属性 = 值
+const box = document.querySelector(".box");
+box.style.width = "200px"; //注意长度单位要写px
+box.style.border = '5px dashed black';
+//对于属性中有“-”的情况，有两种解决方案
+box.style.backgroundColor = "red"; //使用将属性写成驼峰命名形式
+box.style["background-color"] = "blue"; //使用[]来根据key取value
+设置整个页面的背景图片
+document.body.style.backgroundImage = 'url(xxx.png)';
+--通过类名修改，适用于修改样式较多的情况  语法：对象.className = '类名'
+<style>
+    .new_div{
+        /*要修改的CSS样式*/
+    }
+</style>
+<body>
+    <div class="old_div">div</div>
+</body>
+<script>
+    const div = document.querySelector("div"); //获取元素
+    div.className = 'new_div'; //给div新的类名，并覆盖前面的类样式
+</script> 
+如果想继承之前的类名，在之前类CSS样式基础上增加新属性，就写成div.className = 'old_div new_div'形式
+--通过classList控制CSS，解决className易覆盖的问题  
+const div = document.querySelector("div"); //获取元素
+div.classList.add('new_div'); //增加类名，相当于div.className = 'old_div new_div'
+div.classList.remove('new_div'); //删除类名
+div.classList.toggle('old_div'); //切换类名，如果div已经有了old_div就将其删去，没有就把它加上
+（3）表单属性
+-- <input type="text">
+const input = document.querySelector('input');
+console.log(input.value); //获取表单里面的值
+input.value = "新值"; //修改表单里面的数据
+input.type = 'password'; //修改表单属性
+对于表单中添加后有效果、移除后无效果的属性（如disabled checked等），用bool值表示，true表示添加、false表示移除
+-- <input type="checkbox"> 
+const input = document.querySelector('input');
+console.log(input.checked); //判断是否勾选
+input.checked = true; //改变勾选状态
+-- <button>
+const btn  =document.querySelector('button');
+console.log(btn.disabled); //按钮是否禁用--为true禁用，为false不禁用（默认）
+btn.disabled = true; //禁用按钮
+（4）自定义属性：标签中以"data-"开头的属性，如<div data-id="1" data-sm="a">1</div>
+const one = document.querySelector('div');
+console.log(one.dataset); //输出该标签里面所有的自定义属性（键值对形式）
+console.log(one.dataset.id); //获取自定义属性data-id
+one.dataset.id = "new"; //改变自定义属性data-id
+
+3、定时器--间歇函数
+setInterval(函数,间隔时间)
+间隔时间单位为ms，表示隔多长时间执行一次传入函数。打开网页时不会立即执行，而是等待间隔时间后开始第一次执行
+function func() {
+    console.log("执行了func函数");
+}
+setInterval(func, 1000); //开启定时器
+或
+setInterval('func()', 1000);
+如果需要传参
+function func(content) {
+    console.log(content);
+}
+let cont = "abc";
+setInterval(function () {
+    func(cont);
+}, 1000);
+该函数返回一个id数字，标记页面中定时器函数序列
+暂停定时器：clearInterval(timer_id)
+let timer_1 = setInterval(func, 1000); //注意此处不能声明为const，因为后面开启定时器时要对timer_1重新赋值
+let timer_2 = setInterval(func, 1500);
+console.log(timer_1, timer_2); //1  2
+clearInterval(timer_1); //关闭timer_1定时器
+clearInterval(timer_2);
+timer_2 = setInterval(func, 1500); //开启timer_2定时器  
+console.log(timer_2); //3  注意这里不是1，即使关闭了所有定时器，页面中只有1个定时器在运行
+
+已阅读注册协议倒计时按钮，倒计时结束后可点击按钮：
+<body>
+    <!-- 开始时要把按钮禁用 -->
+    <button disabled></button>
+</body>
+<script>
+    const btn = document.querySelector('button');
+    let time = 5; //初始值
+    btn.innerHTML = `我已阅读用户协议(${time})`;
+    let timer = setInterval(function () {
+        time--;
+        btn.innerHTML = `我已阅读用户协议(${time})`;
+        if (time === 0) {
+            btn.disabled = false;
+            clearInterval(timer);
+            btn.innerHTML = "我已阅读用户协议";
+        }
+    }, 1000);
+    /*if(time ==0)
+    {
+        btn.disabled = false;
+        clearInterval(timer);
+    }*/
+</script>
+注意if函数一定要写到定时器函数里面，因为这个判断语句也是要循环运行的。如果写在外面，就只会在最开始执行一次，此时time=5，不会停止定时器
+
+4、事件
+事件种类--鼠标事件：click点击 mouseenter鼠标经过 mouseleave鼠标离开 
+焦点事件（表单获得光标）--focus获得焦点 blur失去焦点
+键盘事件--keydown按下按键 keyup抬起案件
+文本事件--input用户向表单输入信息
+（1）事件监听
+元素对象.addEventListener('事件类型',要执行的函数)
+三要素：事件源--哪个dom元素被触发了、事件类型--用什么方式触发（click等）、事件调用的函数--触发后要作什么
+const btn = document.querySelector("button");
+btn.addEventListener('click', function () {
+    alert("点击了按钮");
+});
+btn.addEventListener('mouseover', function () {
+    console.log("鼠标经过按钮");
+})
+
+以前的写法：btn.onclick = function(){}
+缺点是如果一个对象同一个事件绑定了多个function()，onclick因为是赋值方式传递，只能执行最后一个function()
+

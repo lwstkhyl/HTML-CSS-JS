@@ -1,0 +1,109 @@
+js注释：//  ctrl+/           /* */  shift+alt+a
+html注释：<!-- -->  ctrl+?
+css注释：/*  */
+alt+b在浏览器中执行HTML文件
+ctrl+z撤销 ctrl+y恢复
+在浏览器内f12 检查
+vscode中创建HTML文件后，先输入一个!，之后按tab即可生成标准格式
+移动某行代码：把光标放到要移动的那行，alt+上/下键
+将光标置于行末：alt+右箭头键
+vscode自动对齐：shift+alt+f
+
+js中严格区分大小写，每一条语句以分号结尾（不写时浏览器会自动添加，但会消耗系统资源，也可能会加错分号）
+
+alert("弹出警告窗")    
+document.write("在页面上显示")    document.write("<br/>");换行
+console.log("在控制台中输出")
+注意：js中代码顺序执行，alert弹出警告窗时，需点击“确定”按钮后才算执行完这条语句，并接着执行下面代码
+
+js代码的编写位置：
+1、写在HTML控件中，如
+    <button onclick="alert('点击了按钮')">一个按钮</button>
+    <a href="javascript:alert('点击了超链接');">一个超链接</a>
+    <a href="javascript:;">一个点击后没有任何效果的超链接</a>
+这种方式不推荐使用
+2、HTML文件的<script>标签，其中放js代码，如<script>alert("xxx")</script>
+3、在HTML文件中引用已编写的js文件：<script src="01.js"></script>
+注意：同一个script标签一旦用于引入外部文件，就不在执行其中的js代码。若既想引入文件又想在script标签内编写，就需再另创建一个script标签。执行时按从上到下顺序执行script标签
+
+js中使用var或let声明变量 var a;此时a为undefined
+var与let的区别：var可以先使用再声明（即使先使用的时候是undefined不会报错），let必须先声明再使用；let不允许重复声明（将同一变量声明多次）
+标识符规则：可含有字母、数字、下划线和$，不能有其它符号，不能以数字开头，不能是js中的关键字/保留字。js底层保存标识符时采用Unicode编码，所以理论上utf-8中含有内容都可作为标识符（包括中文，但不建议使用）
+
+6种数据类型：string字符串 number数值 Boolean布尔值 null空值 undefined未定义 object对象
+使用 typeof a 来检查变量a的类型
+1、string：用单引号或双引号，一对引号括起来的内容里面不能出现一对同类型引号（引号不能嵌套），可以外双内单或外单内双
+特殊情况：将 我说:"xxx" 这个字符串赋值给变量--var str = "我说:\"xxx\"";  使用转义字符（单引号同理）
+\n表示换行	\t表示tab制表符	    \\表示\
+2、number：包括整数和浮点数
+数字的最大值：Number.MAX_VALUE 若number超过这个值，则返回infinity正无穷；最小值就是-Number.MAX_VALUE，同理还有-infinity；最小的正小数是Number.MIN_VALUE。正负无穷都是number类型
+NaN类型：not a number 若a = “abc" * "abc" ，则a的值就是NaN，它也是number类型
+js的小数运算可能不准确（与大多数语言相同）
+16进制数字：以0x开头  0x10=16 0xff=255 ；8进制数字：以0开头 070=56 ； 2进制数字：以0b开头（不是所有浏览器都支持）
+3、Boolean：true和false
+4、Null:只有一个值null 表示一个为空的对象 使用typeof检查null时返回object
+5、Undefined：也只有一个值undefined未定义 当声明一个变量但不给其赋值时，它的值就是undefined 
+
+
+强制类型转换：将其它数据类型转为string number Boolean
+1、转为string：
+（1）调用toString方法，该方法不会改变原变量，而是将改变后的值返回。null和undefined没有该方法
+var a = 123;
+var a_str = a.toString();
+（2）调用String()函数，该方法可以将null和undefined转成"null"和"undefined"
+var a = 123;
+var a_str = String(a);
+
+2、转为number：
+（1）调用Number()函数
+var a = "123";
+var a_num = Number(a);
+字符串->数值：纯数字的字符串->数字；有非数字内容的字符串->NaN；空字符串/只有空格的字符串->0
+Boolean->数值：true->1  false->0
+Null->数值：null->0
+Undefined->数值：undefined->NaN
+（2）parse系列函数：专门用于字符串
+parseInt()--将一个字符串中有效的整数内容取出（从前往后读取字符串，将数字取出，直至读到不是数字的字符）
+var a = "123px";
+var a_num = parseInt(a);  //a_num为123 
+"1b23px"->1
+"b123px"->NaN
+parseFloat()--获得小数，其它同parseInt
+"123.456px"->123.456
+"123.4.56px"->123.4
+注意：若对非字符串类型使用parse系列函数，会先将其转换为字符串，再执行parse操作。用此特性可以对小数进行取整：parseInt(123.456)->123
+用指定的进制将字符串转为数字：
+var a = "070";
+var a_10 = parseInt(a,10);  //70
+var a_8 = parseInt(a,8);  //56
+
+3、转化为Boolean：使用Boolean()函数
+数字->bool：除了0和NaN其它都转成true 
+字符串->bool：除了空字符串都是true
+null->false   
+undefined->false
+object->true
+
+
+运算符：
+string+string/其它类型值，会先将其它类型值转换为字符串（String()函数），之后再拼接拼接 ；非string的值相加会转成number再相加。用此特性可以用 a = a + "" 将a变为string。  1+2+"3"="33"     "1"+2+3="123"
+-*/%都会将所有类型的值转成number再运算。用此特性可以用a = a - 0 将a转为number（*1 /1也可）
+
+一元运算符：+不会对数字产生影响 -取相反数（都是转成number取反，因此可以用a = +a将a变为number）
+自增自减：a++;a--;前置和后置自增的区别同c（表达式结果不同：a++为a ++a为a+1）
+
+!非：先转为Boolean再运算，因此可以用a = !!a 将a转为Boolean） 
+&&和||：如果第一个值为false/true就不会算第二个值（同c）。当其两边的值有非Boolean值的时候，会先将其转为Boolean再运算，并返回原值（若结果为true/false，就返回两个值中为true/false的那个值  1||0->1 0&&2->0）。
+特殊情况：1&&2->2  0&&NaN->0（返回检查的最后一个值：1&&2判定为true，要检查1和2，所以返回2；0&&NaN判定为false，只需检查0，所以返回0） 同理1||2->1  0||NaN->NaN
+
+> < >= <=在非数值性的比较中，会先转化成数值型再比较；任何值和NaN作任何比较结果都是false
+特殊情况：如果符号两侧的值都是字符串，则不会将其转换成数值比较，而会比较字符的编码（一位一位的进行比较，即先比两个string的第一个字符，如果它们相同再比较下一位）
+使用Unicode编码输出字符：4位16进制编码前加\u，，如"\u0031"可以输出0031对应的字符；HTML中在10进制编码前加&#后加分号，如<h1>&#9760;</h1>
+
+==和！=：当两个值类型不同，会转换成相同类型再比较是否相等（大部分情况下都转为数字）
+特殊情况：null==0->false  undefined==null->true（undefined衍生自null）  NaN不和任何值相等（包括NaN），可以通过isNaN(a)函数判断一个值a是否为NaN（该函数会先将a转成数值类型，再判断其是否为NaN，因此isNaN("abc")->true）
+===和！==：不作类型转换，当类型不同时就返回false/true  undefined===null->false 
+
+三元运算符：   条件表达式?语句1:语句2       若条件表达式为true执行语句1，反之执行语句2
+如果条件表达式的值是非bool值，会先转换成bool值再判断
+求最大值：    var max_2 = a > b ? a : b;    var max_3 = max_2 > c ? max_2 : c;   var max = a > b ? (a > c ? a : c) : (b > c ? b : c);

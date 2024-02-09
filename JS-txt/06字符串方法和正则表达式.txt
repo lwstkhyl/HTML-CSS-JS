@@ -1,0 +1,105 @@
+在底层，字符串是以字符数组的形式保存的
+var str = "hello";
+console.log(str.length); //5
+console.log(str[1]); //e
+
+字符串的方法：大部分都不会改变原字符串
+1、char系列
+（1）charAt()返回指定位置的字符
+str.charAt(n)相当于str[n]
+（2）charCodeAt(n)返回str[n]字符的Unicode编码
+（3）fromCharCode()根据字符编码获取字符
+var res = String.fromCharCode(n);获取编码为n的字符
+2、concar()连接两个或多个字符串（与数组中相同）
+var res = str.concat(" ", str1)相当于str+" "+str1
+3、查找子串
+（1）indexOf()检索字符串中是否含有指定内容，如果有就返回其第一次出现的索引；没有则返回-1
+var str = "hello";
+var res = str.indexOf("el");
+console.log(res); //1
+也可以接收第二个参数，指定开始查找的位置
+var str = "hello";
+var res = str.indexOf("h", 2); //从str[2]（包括str[2]）开始查找
+console.log(res); //-1
+（2）lastIndexOf()返回最后一次出现的索引，其它与indexOf()相同
+4、切片
+（1）slice(m,n)取[m,n)的字符串，n默认到字符串结束；m n也可以取负数，表示倒数第几个位置
+。（与数组中slice相同）
+var str = "hello";
+var res = str.slice(1, 1);
+console.log(res); //空（[m,m)取不到）
+（2）substring(m,n)取[m,n)的字符串，n默认到字符串结束；注意该方法与slice的不同是它不能接收负值，若传了负值，则默认为0；还可以自动调整参数位置，若传入的m<n，则自动交换（slice没有这项功能，该情况下返回空）
+var str = "hello";
+var res = str.substring(1, -4); //相当于substring(1,0)，又相当于substring(0,1)
+console.log(res);  //h
+（3）substr(m,n)从str[m]开始截取n个字符（包括str[m]）
+var str = "hello";
+var res = str.substr(1, 2);
+console.log(res); //el
+（4）split(seq)按seq将字符串拆分成数组，若不传seq就返回将整个字符串放入数组的第一个元素中返回
+var str = "hello,js,world";
+var res = str.split(",");
+console.log(res); //(3) ['hello', 'js', 'world']
+还可以分离字符串中的每个字母：
+var str = "Hello World";
+var res = str.split("");
+console.log(res); //(11) ['H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd']
+5、大小写转换
+var str = "Hello World";
+var str_lower = str.toLowerCase();
+var str_upper = str.toUpperCase();
+console.log(str_lower); //hello world
+console.log(str_upper); //HELLO WORLD
+
+ES6里面对字符串的更新：
+增加了${}新语法，用处是将字符串变量与字符串进行拼接，与python中的f-string类似
+var a = 1;
+console.log(`a的值是：${a}`); //a的值是：1
+注意字符串两边是`，而不是引号
+
+
+创建正则表达式对象
+var reg = new RegExp("xxx"); //xxx应为正则表达式
+var reg = new RegExp("xxx","i"); //第二个参数"i"表示忽略大小写
+var reg = new RegExp("xxx","g");/ /第二个参数"g"表示全局匹配模式
+也可以使用字面量创建  var 变量 = /正则表达式/匹配模式
+var reg = /xxx/i; //相当于RegExp("xxx","i")
+var reg = /[a-z]/ig; //相当于RegExp("[a-z]", "ig")，即忽略大小写又全局匹配
+var str = "abc"; //待检测的字符串
+var res = reg.test(str); //使用创建的正则表达式对象来检查一个字符串是否符合规则。符合则返回true，反之返回false
+两种创建方式的区别：
+1、使用构造函数创建可以传入一个字符串变量作为正则表达式，而字面量创建不行
+2、用构造函数创建，因为传入的是字符串，需要进行转义。如正则表达式标准里面，用\.来代表“.”这个符号，使用字面量可以直接reg = /\./，而构造函数中就需将\进行转义（”\\“->\），写成RegExp("\\.")的形式；同理reg = /\\/等效于RegExp("\\\\")
+
+使用：
+正则表达式应用在字符串中的方法：
+1、test和exec：
+都是reg.func(str)形式，reg为正则表达式，str为待检测字符串，test返回true/false检测str是否含符合正则表达式的子串；exec返回数组，里面包含符合正则表达式的子串的索引等，若没有则返回空
+以下方法都是都是字符串类型的方法，是str.func(reg)形式
+2、split("xxx")  根据正则表达式来拆分字符串
+var str = "1q2w3e4r5t6y";
+var res = str.split(/[A-z]/); //以所有字母为分隔符进行拆分
+console.log(res); //(7) ['1', '2', '3', '4', '5', '6', '']
+3、search("xxx")  搜索字符串中是否含指定内容，返回该内容第一次出现的索引，不出现则返回-1
+var str = "abc acc adc";
+var res = str.search(/a[cd]c/); //是否含有abc或adc
+console.log(res); //4
+4、match()  根据正则表达式，将符合条件的内容提取出；默认情况下只会提取第一个符合条件的内容，可以设置正则表达式为全局匹配模式来提取所有内容，都会封装到一个数组中返回
+var str = "1q2w3e4r1Q2W3E4R";
+var res1 = str.match(/[a-z]/);
+var res2 = str.match(/[a-z]/ig);
+console.log(res1); //['q', index: 1, input: '1q2w3e4r1Q2W3E4R', groups: undefined]
+console.log(res2); //(8) ['q', 'w', 'e', 'r', 'Q', 'W', 'E', 'R']
+5、replace()  将字符串中指定内容替换成新的内容，返回替换后的新串，不会改变原串；也是默认只替换第一个，设置全局匹配模式替换所有内容；将要替换的值写成空串可以删除指定内容
+var str = "1q2w3e4r1Q2W3E4R";
+var res1 = str.replace(/[A-z]/g, "|");
+var res2 = str.replace(/[a-z]/ig, "");
+console.log(res1); //1|2|3|4|1|2|3|4|
+console.log(res2); //12341234
+注意这4个方法中，split不用设置全局匹配，在找到所有符合正则的位置后进行拆分；search不能设置全局匹配，只能找到第一次出现位置
+
+^$同时出现：精确匹配，表示整个字符串都必须符合指定规则，如/^a$/只能匹配"a"，表示整个字符串就是一个a，"aa"都不行。一般情况下都使用这种精确匹配
+
+
+
+

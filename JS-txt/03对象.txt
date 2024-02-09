@@ -1,0 +1,210 @@
+var obj = new Object(); //创建对象
+
+obj.name = "abc"; //向对象中添加属性
+obj["123"] = 789; //属性名不强制要求遵守标识符规范，但如果使用特殊属性名，需用["123"]的方式创建
+console.log(obj.new_name); //如果读取对象中没有的属性，不报错，而是返回undefined    
+console.log(obj["123"]); //读取特殊属性名时也需采用该种方式
+delete obj.name; //删除对象属性
+
+var obj = {}; //使用对象字母量创建对象，更加简便
+var obj = {name:"abc", age:20}; //可以在创建对象的同时 指定对象的属性（可以加引号也可以不加，但使用特殊变量名时必须加引号）
+var obj = {test:{name:"abc"}}; //也是可以的
+console.log(obj.test.name); 
+
+//使用[]来操作属性更加灵活
+var a = "name";
+console.log(obj[a]); //等效于console.log(obj.name)
+console.log(obj.a); //是错误的
+
+console.log("name" in obj); //检查obj对象中是否有name属性
+
+
+js中变量都保存到栈内存中
+基本数据类型(string number boolean null undefined)：他们的变量都是在栈内存内直接存储，变量之间全部独立，修改其中一个变量对其它变量无影响
+引用数据类型(object)：对象保存到堆内存中，每创建一个新对象，就在堆中开辟出一个新空间，object类型的变量只在栈中保存相应对象的内存地址（对象的引用），若两个变量都指向一个对象，改变其中一个的属性值，会改变另一个的属性值
+var obj1 = new Object(); 
+obj1.name = "abc";
+var obj2=obj1;
+obj2.name = "ABC";  //此时obj1.name也变为"ABC"，相当于改变obj2指针指向的值
+obj2 = null; //相当于指针置空，不影响obj1的值
+当比较两个对象(obj1 == obj)时，比较的时它们的内存地址
+
+
+方法：当函数作为对象的属性保存时，这个函数是这个对象的方法。函数和方法只有名称上的区别
+
+
+循环遍历对象中的属性：
+for (var n in obj) {
+    console.log("属性名：" + n + "  属性值" + obj[n]);
+}
+
+
+创建对象的方式：
+1、工厂方法：（不常用）
+function create_person(name, age) {
+    var obj = new Object();//创建一个新对象
+    obj.name = name;//给对象属性赋值
+    obj.age = age;
+    return obj;//将创建的对象返回
+}
+obj = create_person("abc", 20);
+console.log(obj); //{name: 'abc', age: 20}
+使用工厂方法的创建对象，使用的构造函数都是object，因此对象类型都是object，无法区分处不同类型的对象
+2、构造函数：就是一个普通的函数，创建方式与普通函数无差别，习惯上首字母大写；使用new关键字来调用
+执行流程：new立即创建一个新对象；将新建的对象设为构造函数中的this；执行构造函数中代码；将新建对象this返回
+function Person(name, age) {
+    this.name = name;
+    this.age = age;
+}
+var obj = new Person("abc", 20);
+console.log(obj); //Person {name: 'abc', age: 20}
+使用同一个构造函数创建的对象称为一类对象，构造函数称为一个类；通过类构造函数创建的对象称为该类的实例
+
+使用instanceof检查一个对象是否为一个类的实例：对象 instanceof 构造函数名
+console.log(obj instanceof Person); //是则返回true，反之为false
+所有对象都是object子类，任何对象 instanceof Object; 都返回true
+
+在构造函数内创建方法时，构造函数每执行一次就创建一个新的say_name方法，即所有实例的say_name方法唯一
+function Person(name) {
+    this.name = name;
+    this.say_name = function () {
+        alert("name is " + this.name);
+    }
+}
+var p1 = new Person("p1");
+var p2 = new Person("p2");
+console.log(p1.say_name == p2.say_name); //false
+这样导致性能耗费，可以使所有对象都共享同一个方法（将该方法在全局作用域中定义）
+function say_name() {
+    alert("name is " + this.name);
+}
+function Person(name) {
+    this.name = name;
+    this.say_name = say_name;
+}
+var p1 = new Person("p1");
+var p2 = new Person("p2");
+console.log(p1.say_name == p2.say_name); //true
+但将函数定义在全局作用域，会污染全局作用域的命名空间，并且可能被同名函数覆盖
+原型：对创建的每一个函数，解析器都会向函数中添加一个属性--prototype，该属性对应着一个对象（原型对象）。如果函数是普通函数，prototype无作用；当函数以构造函数形式调用时，它创建的对象中都会有一个隐含属性__proto__（前后各两个下划线），指向该构造函数的原型对象
+function MyClass() {}
+var myclass = new MyClass();
+console.log(MyClass.prototype); //构造函数的原型对象
+console.log(myclass.__proto__); //构造函数创建对象的隐含属性
+console.log(MyClass.prototype == myclass.__proto__); //true->该隐含属性指向原型对象
+即：通过构造函数创建的实例，都有一个__proto__指向原型对象。原型对象相当于一个公共的区域，所有同一类的实例都可以访问到它，因此可将对象中共有的内容统一设置到原型对象中
+当访问对象的一个属性或方法时，会先在自身属性中寻找；若找不到，就去构造函数原型对象中找；若仍然找不到，就去原型的原型中寻找，直到找到object对象，此时若还没有就返回undefined
+function MyClass() {}
+var myclass = new MyClass();
+MyClass.prototype.name = "MyClass的原型对象"; //向原型对象中添加属性name
+console.log(myclass.name); //输出"MyClass的原型对象"
+myclass.name = "myclass"; //向实例中添加属性name（相当于重写）
+console.log(myclass.name); //输出"myclass"
+console.log(myclass.__proto__.name); //输出"MyClass的原型对象"
+相当于：原型对象就是其构造函数的所有实例的父类，所有实例都继承其构造函数原型对象的属性
+因此，可以这样实现上述需求：
+function Person(name) {
+    this.name = name;
+}
+var p1 = new Person("p1");
+var p2 = new Person("p2");
+Person.prototype.say_name = function () { //向原型对象中添加属性
+    console.log("name is " + this.name);
+}
+p1.say_name();
+p2.say_name();
+
+使用in检查对象中是否有某个属性时，如果对象中没有但原型中有，也会返回true。可以使用对象的hasOwnProperty()方法来检查对象自身中是否含有某属性
+function MyClass() { }
+var myclass = new MyClass();
+MyClass.prototype.a = 123;
+console.log("a" in myclass); //true
+console.log(myclass.hasOwnProperty("a")); //false
+这个方法是在object对象中创建的，object对象无原型(object.__proto__==null)
+console.log(myclass.__proto__.hasOwnProperty("hasOwnProperty")); //false
+console.log(myclass.__proto__.__proto__.hasOwnProperty("hasOwnProperty")); //true
+
+当在直接在页面中打印一个对象(console.log(myclass);)时，实际上是输出对象的toString()方法的返回值(console.log(myclass.toString());)
+如果希望在输出对象时不输出[object Object]，可以为对象重写toString()方法
+function Person(name, age, gender, size) {
+    this.name = name;
+    this.age = age;
+    this.gender = gender;
+    this.size = size;
+}
+var p1 = new Person("abc", 20, "man", 29);
+Person.prototype.toString = function () {
+    var res = "";
+    for (var n in this) {  //n会遍历实例和它的原型中的属性（包括重写的toString方法）
+        if (this.hasOwnProperty(n))  //只想输出实例自己的属性
+            res += (n.toString() + "：" + this[n] + "\n");
+    }
+    return res;
+}
+console.log(p1); //有的浏览器有默认的输出方式
+console.log(p1.toString()); //需要具体写上是重写的toString()方法
+
+
+垃圾回收GC：当一个对象没有任何的变量或属性对它进行引用(var obj = new Object(); obj = null;)，我们就无法操作该对象，此时该对象就是一个垃圾，垃圾过多会占用大量内存。在js中有自动的垃圾回收机制，会自动将垃圾对象从内存中销毁，不需进行垃圾回收操作。当我们不再使用一个对象时，将它设为null即可，系统自动回收
+
+Date对象：用于表示时间
+var date = new Date();
+console.log(date); //Mon Jan 29 2024 14:49:45 GMT+0800 (中国标准时间)
+如果直接使用构造函数创建Date对象，则会封装为当前代码执行时间
+要创建一个指定的时间对象，就需要在构造函数中传递一个表示时间的字符串为参数  
+格式： "月/日/年 时:分:秒"   注意，使用中文系统，这样写就是中国标准时间
+var date = new Date("12/13/2011 11:12:13");
+console.log(date); //Tue Dec 13 2011 11:12:13 GMT+0800 (中国标准时间)
+Date对象的方法：
+--getDate()几号
+--getDay()星期几（0表示周日，1表示周一，...）
+--getMonth()月份（0表示一月，1表示2月，...）
+--getFullYear()年份（4位数形式）
+--getHours()小时
+--getMinutes()分钟
+--getSeconds()秒数
+--getMilliseconds()毫秒数
+--toLocaleString()以"2022/4/1 09:08:07"的形式得到表示日期和时间的字符串
+--toLocaleDateString()以"2022/4/1"的形式得到表示日期的字符串
+--toLocaleTimeString()以"09:08:07"的形式得到表示时间的字符串
+--getTime()/+new Date()获取日期对象的时间戳（从格林威治时间的1970年1月1日0时0分0秒到现日期经过的毫秒数），计算u那就底层保存时间都是使用的时间戳
+var time = Date.now();可以获取这行代码执行时的时间戳，用此方法可以获取指定代码的执行时间：
+var start_time = Date.now();
+/*要测量的代码*/
+var end_time = Date.now();
+console.log(end_time-start_time);
+
+Math类：和其它的对象不同，它没有构造函数，属于一个工具类，不需创建对象，封装了数学运算相关的属性方法
+Math.PI 圆周率
+Math.E e
+Math.LN2 ln2
+Math.LN10 ln10   还有很多
+Math.abs(a)  a的绝对值
+还有cos sin tan acos asin atan log求对数 exp求e的x次幂 sqrt开方等等
+比较特殊的：
+Math.ceil(a)  向上取整（小数位只要有值就自动进1--1.0->1  1.1->2）
+Math.floor(a)  向下取整（只取整数位，小数部分会被舍掉）
+Math.round(a)  四舍五入取整
+Math.random()  生成(0,1)的随机数（真随机）
+Math.floor(Math.random() * (max - min + 1) + min)  生成从min到max范围的随机数 
+Math.max(a,b,...)  多个数中的最大值（同理还有min最小值）
+Math.pow(x,y)  x的y次幂
+
+包装类：js提供了三个包装类，通过它们可以将基本数据类型的数据转换为对象
+String()  可以将基本数据类型字符串转换为String对象
+Number()  可以将基本数据类型数字转换为Number对象
+Boolean()  可以将基本数据类型布尔值转换为Boolean对象
+var str = new String("abc");
+var num = new Number(3);
+var bool = new Boolean(true);
+它们都是object类型，可以添加属性
+注意：实际应用中不会使用基本数据类型对象，因为它们在作比较时可能出现补坑预期的结果，如
+var num = new Number(3);
+var num2 = new Number(3);
+console.log(num == num2); //false  因为比较的是内存地址，两个new开辟的内存不同
+var bool = new Boolean(false);
+if (bool) {
+    console.log("bool为true")
+} //仍然执行，因为对象转Boolean类型都为true
+console.log(bool == false); //true  与上面歧义
+它的意义在于：当对一些基本数据类型的值调用方法属性时（如num.toString()），浏览器会临时使用包装类将其转换为对象，然后再调用对象的属性方法，调用完后再把它转回基本数据类型。相当于只是浏览器内部进行使用

@@ -1,0 +1,32 @@
+使用{}对语句分组，一个{}中的语句称为一个代码块，代码块的后面为分号。js中的代码块只有分组作用，而无其它用途，代码块内部声明的变量在外部也可访问
+if的写法和执行规则同c   if...else...和if...else if...else...也同c
+switch(a){    //将a依此与1、2...比较，与哪个相等（注意是全等===）就从哪个case开始执行，直到遇到break，若a与case都不等就执行default
+case 1:语句1  break;
+case 2:语句2    break;
+default: 语句}
+while(条件){循环体}  do{循环体}while(条件)  for(var i=0;i<10;i++)  与c相同
+
+为循环语句创建label标识当前循环：
+outer:  //标识下面的外层循环为outer
+for(var i=0;i<10;i++)
+{
+    inner:
+    for(var j=0;j<10;j++)
+    {
+        break outer;//终止外层循环
+        continue outer;//跳过此次外层循环
+    }
+}
+
+
+prompt("xxx");可以弹出一个提示框，该提示框中会带有一个文本框，用户可以在文本框中输入一段内容，传入的参数"xxx"为提示框的提示文字，该函数返回输入的值（以string形式），如var input = prompt("请输入：");  
+使用var input_number = + prompt("请输入："); 可直接得到数值型输入
+当有多个prompt()时会顺序执行（输入完一个后再弹出下一个提示框）
+
+parseInt(a)不仅可以字符串转数值，还可以将double转为int，如parseInt(a/100);获得a的百位数
+Math.sqrt(a)对a开方
+
+计算某段代码运行时间：使用console.time("test")和console.timeEnd("test")函数，test为计时器名称
+console.time("test")
+/*要计时的代码*/
+console.timeEnd("test");//在浏览器控制台中可以看到运行时间

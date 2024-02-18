@@ -1,2 +1,0 @@
-1.31更新：选择器部分  background简洁写法和background-size
-display样式

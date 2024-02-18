@@ -1,0 +1,655 @@
+作用域链本质上是底层的变量查找机制：函数执行时会优先查找当前函数作用域中变量，若当前作用域查不到会依次逐级查找父级作用域中变量，直到全局作用域。
+子作用域可以访问父作用域，但父作用域无法访问子作用域  
+
+垃圾回收机制：全局变量一般不会回收（直到关闭页面时），局部变量不用时会被自动回收
+内存泄露：程序分配的内存由于某种原因没释放/无法释放
+
+闭包：内层函数+外层函数的变量，作用是将变量封闭在函数内，避免变量污染，同时外部可以访问函数内变量。缺点是可能引起内层泄露（外层函数内变量可能不会被释放）
+一个简单的形式：
+function outer() {
+    let a = 10; //外层函数的变量
+    function inner() { //内层函数
+        console.log(a);
+    }
+    inner();
+}
+outer();  //10  
+基本形式：
+function outer() {
+    let a = 10; //外层函数的变量
+    function inner() { //内层函数
+        console.log(a);
+    }
+    return inner;
+}
+const inner_func = outer();
+inner_func(); //10
+应用--统计函数调用次数：
+采用这种方法可以实现目的，但count是全局变量，易被修改
+let count = 0;
+function func(){
+    count++;
+    console.log(`函数调用了${count}次`);
+}
+func();
+闭包的形式：count变量在全局不会被修改
+function outer(){
+    let count = 0; //实现了count这个变量的私有
+    function func(){
+        count++;
+        console.log(`函数调用了${count}次`);
+    }
+    return func; //必须将内层函数返回，以便在全局操作
+}
+const fn = outer(); //fn就是内层的func函数
+fn(); //调用func函数
+
+函数的动态参数：当不确定传给函数几个实参时，使用函数的arguments参数获得传入的实参，它是一个伪数组，包含传入的实参，并且只存在于函数中
+如求出所有实参之和的函数：
+function getSum() {
+    let sum = 0;
+    for (let i = 0; i < arguments.length; i++) {
+        sum += arguments[i];
+    }
+    return sum;
+}
+console.log(getSum(2, 2, 1, 3, 5)); //13
+函数的剩余参数：使用形参 ...变量名  来接收传入的实参，该变量是一个数组，里面元素为传入的实参
+function func(...other) {
+    console.log(other); //使用的时候不需要写...
+}
+func(1, 1, 2); //(3) [1, 1, 2]
+它们的区别在于：剩余参数之前还可以定义形参，此时剩余参数就是有定义形参后传入的实参
+function func(a, b, ...other) {
+    console.log(other);
+}
+func(1, 1); //[]
+func(1, 1, 2, 3, 4); //(3) [2, 3, 4]
+建议使用剩余参数，因为它更加灵活，而且是真数组
+
+上面的...称为展开运算符，可以将一个数组展开，且不改变原数组
+const arr = [1,2,3];
+console.log(...arr); //1  2  3
+console.log(Math.max(...arr)); //求数组中元素最大值（因为Math.max必须接收数值型变量）
+const arr1 = [1,2,3];
+const arr2 = [4,5,6];
+const arr_merge = [...arr1,...arr2]; //合并数组
+
+箭头函数：更简洁的函数写法，且不绑定this，适用于需要使用匿名函数的地方
+写法：变量（函数名） = (形参) => {函数体}
+const func = (a,b) => {
+    console.log(a,b);
+};
+func(1,2); //1 2
+当只有1个形参时可以省略小括号：
+const func = a => {
+    console.log(a);
+};
+当只有1行代码时可以省略大括号，这行代码会被自动作为返回值返回
+const func = a => console.log(a);
+func(1); //1
+const func = a => a + a;
+console.log(func(1)); //2
+例如想阻止表单的默认行为：
+const form = document.querySelector('form');
+form.addEventListener('submit',e => e.preventDefault());
+
+箭头函数可以直接返回一个对象：
+const func = function (uname) {
+    return { uname: uname };
+};
+console.log(func('abc')); //{uname: 'abc'}
+相当于：
+const func = (uname) => ({uname:uname});
+如果不加{}外的小括号，就无法分清是函数体的{}还是对象的{}，因此要加小括号
+
+例：使用箭头函数求和
+const getSum = (...arr) => {
+    let sum = 0;
+    for (let i = 0; i < arr.length; i++) {
+        sum += arr[i];
+    }
+    return sum;
+}
+console.log(getSum(1, 2, 3)); //6
+
+箭头函数的this：正常函数this都是指调用它的对象，而箭头函数不会创建自己的this，只会从自己作用域链的上一层沿用this
+const func = () => {
+    console.log(this);
+};
+func(); //window
+之所以是window，不是因为window调用了func函数，而是因为func函数作用域的上一级作用域内（全局作用域）内的this就是指window
+const obj = {
+    name:'abc',
+    say_hi:()=>{
+        console.log(this);
+    }
+};
+obj.say_hi(); //window
+因为say_hi在obj作用域内，所以this指向与obj内this指向相同，obj是window对象，所以this是window
+
+const obj = {
+    name:'abc',
+    say_hi:function(){
+        const func = () =>{
+            console.log(this); //obj
+        }
+    }
+};
+func中this应指向function中的this，而它是一个正常函数，this就是调用它的对象obj
+总的来说：箭头函数没有自己的this指向，它的this指向上一级作用域的this（根据作用域链），因此在箭头函数中要谨慎使用this来指代某个对象
+在对DOM的操作中，因为有时用this指向标签，所以不推荐在DOM事件中使用箭头函数；原型、构造函数中 也不推荐使用
+const btn = document.querySelector('button');
+btn.addEventListener('click',function() {
+    console.log(this); //btn
+});
+btn.addEventListener('click',() => {
+    console.log(this); //window
+});
+
+数组解构：将数组的单元值批量赋值给变量
+const arr = [1,2,3];
+const [a,b,c] = arr; //解构赋值
+console.log(a,b,c); //1  2  3
+相当于
+const a = arr[0];
+const b = arr[1];
+const c = arr[2];
+也可接收返回数组的函数：
+function getvalue(){
+    return[10,20];
+}
+const [a,b] = getvalue();
+应用：
+与python相同的多变量赋值方式--const [a,b] = [10,20];  不用分别给a,b都写一行
+交换2个变量的值--[a,b] = [b,a];
+数组解构的特殊情况：
+1、值少变量多：多的变量为undefined
+const [a,b,c] = [1,2];
+console.log(a,b,c); //1  2  undefined
+设置默认值可解决该问题
+const [a=0,b=0,c=0] = [1,2]; //0是abc的默认值，当右侧没有值给它们时，会遵循默认值
+console.log(a,b,c); //1  2  0
+2、变量少值多：多的值被忽略
+const [a,b] = [1,2,3];
+console.log(a,b); //1  2
+剩余参数可解决该问题
+const [a,...arr] = [1,2,3,4];
+console.log(a,arr); //1  (3)[2,3,4]
+3、按需导入赋值
+const [a,,c] = [1,2,3]; //没有变量接收2这个值
+console.log(a,b,c); //1  2  3
+4、支持多维数组解构
+const [a,c] = [1,[2,3]];
+console.log(a,c); //1  (2)[2,3]
+const [a1,[b1,b2]] = [1,[2,3]];
+console.log(a1,b1,b2); //1  2  3
+
+JS中语句必须加分号的两种情况：
+1、立即执行函数后(function(){})();   
+2、如果一条语句以[]数组开头，该语句的前面要加分号
+let [a,b]=[1,2]; //必须加分号
+[b,a]=[a,b];
+let str = 'a'; //必须加分号
+[1,2,3].map(function(){});
+
+对象解构：将对象属性方法快速赋值给变量
+const obj = {
+    name:'abc',
+    age:20
+};
+const {name,age} = obj;  
+console.log(name,age); //'abc'  20
+相当于
+const name = obj.name;
+const age = obj.age;
+注意：对象解构时用于接收的变量名必须与属性名相同，不相同的变量会成为undefined
+如果解构时已经有了与属性名相同的变量名，可以使用  旧变量名（属性名）:新变量名  的方式
+const {name:obj_name,age:obj_age} = {name:'abc',age:20};
+console.log(obj_name,obj_age); //'abc'  20
+可以只接收其中一部分属性：
+const obj = {
+    name:'abc',
+    gender:'男',
+    age: 20
+};
+const {gender} = obj;
+console.log(gender); //男
+数组对象解构：
+const obj = [
+    {
+        name:'abc',
+        age:20
+    }
+];
+const [{name,age}] = obj;
+多级对象解构：
+const obj = {
+    name: {
+        first: 'abc',
+        last: 'ABC'
+    },
+    age: 20
+};
+const { name: { first, last }, age } = obj;
+console.log(first, last, age); //'abc'  'ABC'  20
+
+应用：当后台传入一个含很多属性的对象，而处理函数只需用到其中一个属性时
+const data = {
+    code:200,
+    ......
+};
+function render({code}){
+    console.log(code); 
+}
+render(data); //200
+相当于
+function render(data){
+    const {code} = data;
+    console.log(code); 
+}
+
+保留小数：num.toFixed(小数位数)，若num小数点后位数<传入的位数则用0补齐，保留时遵循四舍五入的原则
+const num = 10;
+console.log(num.toFixed(2)); //10.00
+const num1 = 1.456;
+console.log(num1.toFixed(1)); //1.5
+注意：不能直接写 10.toFixed(2)
+
+
+深入对象：
+实例化：使用new关键字调用函数的行为，实例化构造函数时若没参数传入可省略()
+实例化执行过程：new创建新的空对象object；构造函数中的this指向该对象；执行构造函数代码，修改this，添加新的属性；将修改后的新对象返回
+实例成员：通过构造函数创建的对象称为实例对象，实例对象中的属性方法称为实例成员/方法。实例对象是相互独立互不干扰的，所以实例成员/方法也是独立的
+静态成员：构造函数的属性/方法，只能通过构造函数来访问，静态方法中的this指向构造函数，如Date.now() Math.PI等
+function Person(name) { //构造函数
+    this.name = name;
+}
+Person.eyes = 2; //静态属性
+Person.sayHi = function () { //静态方法
+    console.log(this);
+}
+Person.sayHi(); //ƒ Person(name) { this.name = name;}//构造函数
+const p = new Person('abc'); //实例对象
+p.age = 20; //实例属性--中存在于这个实例对象中，其它实例对象没有该属性
+
+Object静态方法：
+Object.keys(obj)--获得obj所有的属性名（以数组形式返回）
+Object.values(obj)--获得obj所有的属性值（以数组形式返回）
+Object.assign(des,src)--将src拷贝给des对象，也常用于给对象添加属性（des对象会添加src的属性）
+const a = {
+    'name':'abc',
+    'age':20
+};
+console.log(Object.keys(a)); //(2) ['name', 'age']
+console.log(Object.values(a)); //(2) ['abc', 20]
+const a_copy = {};
+Object.assign(a_copy,a); //将a对象拷贝给a_copy
+console.log(a_copy); //{name: 'abc', age: 20}
+const a_add = {
+    'gender':'男',
+    'height':180
+};
+Object.assign(a,a_add); //将a_add添加到a对象中
+//也可以Object.assign(a,{'gender':'男','height':180});
+console.log(a); //{name: 'abc', age: 20, gender: '男', height: 180}
+
+原型：每一个构造函数都有一个prototype属性，它表示一个对象，称为原型对象。这个对象可以挂载函数，当构造函数实例化时不会多次构建函数，节约内存。因此可以把一些不变的方法直接定义在prototype对象上，这样所有实例都可以使用这些方法。
+注意：构造函数和原型对象中this都指向实例化的对象
+在使用构造函数创建类时：公共属性写到构造函数内，公共方法写到构造函数原型里
+function Person(name,age){
+    this.name = name;
+    this.age = age; //name和age是公共属性
+}
+Person.prototype.sayhi=function(){ //sayhi是公共方法
+    console.log(this.name);
+};
+const p1 = new Person('abc',20);
+const p2 = new Person('ABC',22);
+p1.sayhi(); //abc
+p2.sayhi(); //ABC
+console.log(p1.sayhi===p2.sayhi); //true
+例：给数组扩展求最大值方法and求和方法，使任意数组实例对象都可使用->定义到Array原型上
+Array.prototype.max = function () {
+    return Math.max(...this);
+};
+Array.prototype.sum = function () {
+    return this.reduce((prev, item) => prev + item);
+};
+const arr = [2, 1, 4, 5, 3, 3, 5];
+console.log(arr.max()); //5
+console.log(arr.sum()); //23
+注意：因为Array.prototype.func是直接在window下使用的，所以不能用箭头函数来作为Array.prototype.func的接收值，因为这样箭头函数的this将指向window，而不是当前作用域中的this（即Array对象）
+Array.prototype.max = () => Math.max(...this); //这样是错误的
+
+constructor属性：原型对象里面的一个属性，指向该原型对象的构造函数，用来标识一个原型对象属于哪个构造函数
+function Person(name, age) {
+    this.name = name;
+    this.age = age;
+}
+console.log(Person.prototype.constructor); //ƒ Person(name,age){this.name=name;this.age=age;}
+console.log(Person.prototype.constructor === Person); //true
+使用场景：当我们想给原型对象添加很多个方法时，
+Person.prototype.sing=()=>console.log("sing");
+Person.prototype.dance=()=>console.log('dance');
+可以直接写成：
+Person.prototype={
+    sing:()=>console.log('sing'),
+    dance:()=>console.log('dance')
+};
+但这样写会产生问题，因为第二种方法是直接给原型对象赋值而不是追加，因此会覆盖它的constructor属性，使得原型对象无法找到它对应的构造函数。可以这样解决：
+Person.prototype={
+    constructor:Person, #重新指回构造函数
+    sing:()=>console.log('sing'),
+    dance:()=>console.log('dance')
+};
+
+对象原型：在每个实例对象里都有一个属性__proto__，指向构造函数的原型对象。之所以实例对象可以使用原型对象的属性方法，就是因为对象有__proto__这个属性。有些浏览器会用[[prototype]]来显示__proto__
+__proto__是只读属性，用来表明当前实例对象指向哪个原型对象，其中也有一个constructor属性指向该实例对象的构造函数（因为__proto__是prototype，prototype里面有constructor属性）
+function Person(name, age) {
+    this.name = name;
+    this.age = age;
+}
+const p1 = new Person('abc', 20);
+console.log(p1.__proto__); //{constructor: ƒ}
+console.log(p1.__proto__ === Person.prototype); //true
+
+这些属性使得构造函数、构造函数的实例对象、构造函数的原型对象三者联系在一起                插图
+
+原型继承：将公共属性添加到想继承这些属性的构造函数的原型对象上
+const Person = {
+    eyes: 2,
+    mouth: 1
+};
+function Student(school) {
+    this.school = school;
+}
+Student.prototype = Person; //Student通过原型继承Person
+Student.prototype.constructor = Student; //指回原来的构造函数（必须加，要不constructor属性被覆盖）
+Student.prototype.go_school = () => console.log('goschool'); //给Student添加方法
+function Adult(work) {
+    this.work = work;
+}
+Adult.prototype = Person; //Adult通过原型继承Person
+Adult.prototype.constructor = Adult;
+Adult.prototype.go_work = () => console.log('gowork'); //给Adult添加方法
+
+console.log(Adult.prototype, Student.prototype); //是相同的，都有go_work和go_school两个方法
+因为Adult.prototype和Student.prototype都指向Person，给它们添加属性就相当于给Person添加属性，所以它们是相同的。然而我们不想让这两个子构造函数有相同的属性方法，可以让Student和Adult继承Person类的两个不同实例对象
+function Person() {
+    this.eyes = 2;
+    this.mouth = 1;
+}
+function Student(school) {
+    this.school = school;
+}
+Student.prototype = new Person(); //Student通过原型继承Person的一个实例对象
+Student.prototype.constructor = Student; 
+Student.prototype.go_school = () => console.log('goschool'); 
+function Adult(work) {
+    this.work = work;
+}
+Adult.prototype = new Person(); //Adult通过原型继承Person的另一个实例对象
+Adult.prototype.constructor = Adult;
+Adult.prototype.go_work = () => console.log('gowork');
+
+const s1 = new Student('school');
+const a1 = new Adult('work');
+console.log(s1, a1); //现在就达到了想要的效果 
+s1有eyes mouth school go_school()    a1有eyes mouth work go_work()
+总结：父构造函数（父类）  子构造函数（子类）   子类的原型=new 父类
+
+原型链：JS中最基本的构造函数是Object() ，所有对象都是Object()的一个实例化对象，包括我们自己创建的构造函数的原型对象。Object及其原型对象是整个原型链的最根部                    插图
+function Person(){}
+console.log(Person.prototype.__proto__===Object.prototype); //true
+console.log(Object.prototype.__proto__); //null
+原型链的查找规则：
+（1）当访问一个对象的属性方法时，首先查找这个对象自身有没有该属性方法；
+（2）如果没有就查找它的原型(也就是__proto__指向的prototype原型对象)；
+（3）如果还没有就查找原型对象的原型(Object的原型对象)；
+（4）依此类推一直找到Object为止(null)。
+__proto__对象原型的意义就在于为对象成员查找机制提供一个方向，或者说一条路线
+使用instanceof检查一个对象是否为一个类的实例：对象 instanceof 构造函数名
+function Person() { }
+const p = new Person();
+console.log(p instanceof Person); //true
+console.log(p instanceof Array); //false
+console.log([] instanceof Array); //true
+所有对象都是object子类，任何对象 instance of Object; 都返回true
+
+递归函数：函数内部调用自己，若想让递归函数执行有限次则必须要有终止条件
+例：通过递归使用setTimeout函数模拟setInterval的效果--每隔1s刷新时间显示
+const li = document.querySelector('li');
+function show_time() {
+    li.innerHTML = new Date().toLocaleString();
+    setTimeout(show_time, 1000); //在刷新时间后启动定时器，1s后再次执行该函数刷新时间并启动定时器，达到循环的效果
+}
+show_time();
+
+深浅拷贝：一个简单的例子--创建对象a，之后let b=a; 更改b的属性，则a属性也会跟着改变。因为b=a实际是把a地址给b，b和a都指向同一块内存，改变一个就会改变另一个。使用深浅拷贝来解决这个问题
+浅拷贝：拷贝对象第一层属性的值
+方法：des={...src};  或   des={}; Object.assign(des,src);   表示将src内容拷贝到des中
+const obj = {
+    'name': 'abc',
+    'age': 20
+};
+const o = {};
+Object.assign(o, obj);
+//或const o = {...obj};
+o.age = 18;
+console.log(o.age); //18
+console.log(obj.age); //20
+问题：如果对象里面还有对象，则内层对象还是拷贝的地址，改变一个会改变另一个
+const obj = {
+    'person': {
+        age: 20
+    }
+};
+const o = { ...obj };
+o.person.age = 18;
+console.log(o.person.age); //18
+console.log(obj.person.age); //18
+即浅拷贝只针对第一层是拷贝值，因为内层对象的值是它的地址，所以会出现这个问题
+
+深拷贝：拷贝的是对象，不是地址
+常见方法：递归浅拷贝、lodash库的cloneDeep函数、JSON.stringify
+1、递归：遍历所有元素，若是基本数据类型就直接浅拷贝，若是引用数据类型就再调用函数进行递归
+function deep_copy(des, src) { //将src拷贝给des
+    for (let key in src) { //遍历src对象，其中key是属性名
+        if (src[key] instanceof Array) { //如果属性值是数组
+            des[key] = []; //初始化空数组
+            deep_copy(des[key], src[key]); //递归调用，将src[k]拷贝给des[k]
+        }
+        else if (src[key] instanceof Object) { //如果属性值是对象（注意要写判断是不是数组，因为数组属于对象）
+            des[key] = {}; //初始化空对象
+            deep_copy(des[key], src[key]); //递归调用，将src[k]拷贝给des[k]
+        }
+        else des[key] = src[key]; //如果即不是对象也不是数组，只是基本数据类型，直接浅拷贝就行了
+    }
+}
+const obj = {
+    'school': 'high-school',
+    'person': {
+        'age': 20,
+        'name': 'abc',
+        'hobby': ['basketball', 'tennis'],
+    }
+};
+let obj_copy = {};
+deep_copy(obj_copy, obj);
+obj_copy.person.age = 18;
+obj_copy.person.hobby[0] = 'run';
+console.log(obj);
+console.log(obj_copy); //obj_copy改变不影响obj
+2、将下载的lodash.min.js引入工作目录，之后用scrip标签引入这个库，使用：const des = _.cloneDeep(src);即可，des无需赋初值
+<script src="lodash.min.js"></script> <!-- 先引用这个库 -->
+<script>
+const obj = {xxx...};
+const obj_copy = _.cloneDeep(obj);
+</script>
+3、把对象转换为JSON字符串，再把这个字符串转换成对象，得到的对象与原来的没有任何关系，相当于深拷贝
+const obj = {xxx...};
+const obj_copy = JSON.parse(JSON.stringify(obj));
+三种方法中最全面的就是lodash库，因为JSON不能转换函数对象等
+
+异常处理：
+1、抛出异常：throw抛出异常信息，同时程序终止运行；throw后面跟的是错误提示信息；Error对象配合throw使用可以设置更详细的错误信息
+function add(x,y){
+    if(!x||!y){
+        throw "参数不能为空";
+    }
+    return x+y;
+}
+add(); //Uncaught 参数不能为空
+若改成throw new Error("参数不能为空");则输出 Uncaught Error: 参数不能为空 at add (01.html:34:19)
+2、try-catch-finally捕获异常
+try{可能出现异常的语句} catch(error){处理捕获的error} finally{不管try代码有没有异常都一定执行}
+function func() {
+    try {
+        const p = document.querySelector('p');
+        p.style.color = 'red';
+    }
+    catch (err) {
+        console.log(err.message); //打印错误信息
+    }
+    console.log('程序结束');
+}
+func(); //Cannot read properties of null (reading 'style')      程序结束
+一般情况下捕获异常后需结束程序，需要加return或throw语句：
+function func() {
+    try {
+        const p = document.querySelector('p');
+        p.style.color = 'red';
+    }
+    catch (err) {
+        console.log(err.message); //打印错误信息
+        throw new Error('程序出现异常');
+    }
+    finally {
+        console.log('finally:程序结束');
+    }
+    console.log('程序结束');
+}
+func(); //输出：
+Cannot read properties of null (reading 'style')
+finally:程序结束
+01.js:339  Uncaught Error: 程序出现异常  at func (01.js:339:15)
+可以看到，throw后面的语句console.log('程序结束');不会执行，但finally始终会执行
+3、debugger语句：在程序的指定位置打断点
+function func() {
+    console.log(1);
+    debugger;
+    console.log(2);
+}
+func();
+在浏览器运行后，会自动跳转到调试界面并在debugger处暂停，相当于在这里打一个断点。适用于代码较长时直接跳转到想暂停打断点的位置
+
+改变this的指向：call() apply() bind()
+1、call()使用较少：作用是调用函数的同时指定函数内this的值
+func.call(thisArg,funcArg,...) 第一个参数为指定的this值，之后参数为传递给函数的参数
+function fn() {
+    console.log(this);
+}
+let a = 10;
+fn(); //window对象
+fn.call(a); //10
+2、apply()使用较多：作用是调用函数的同时指定函数内this的值
+func.apply(thisArg,[funcArgs]) 第一个参数为指定的this值，第二个参数必须为数组，里面是传递给函数的参数。因此该方法主要与数组有关系
+function fn(x, y) {
+    console.log(this);
+    console.log(x + y);
+}
+let obj = {};
+fn.apply(obj, [1, 2]); //{} 3
+使用场景：求数组最大值
+const arr = [1, 2, 1, 4, 6, 4];
+//以前的方法--使用展开运算符：const max= Math.max(...arr);
+const max = Math.max.apply(Math, arr); //使用apply函数
+因为max函数中不使用this，所以可以传任意参数作为this取值（null也可以）但一定要写上
+3、bind()使用较多：不会调用函数，但能改变函数内this指向，返回将this改变后的新函数
+func.bind(thisArg,funcArg,...) 与call相同，区别是不调用函数，而是将新函数返回
+function func() {
+    console.log(this);
+}
+const a = 10;
+const new_func = func.bind(a);
+func(); //window
+new_func(); //10
+使用场景：改变定时器内this指向
+例：一个按钮，点击后2s内禁用，之后启用
+const btn = document.querySelector('button');
+btn.addEventListener('click', function(){
+    this.disabled = true;
+    setTimeout(function(){
+        this.disabled = false;
+    },2000); //此时this指向window，因为setTimeout的调用者是window
+});
+这样写不能实现效果，两种解决方案：
+（1）将定时器内函数改为箭头函数，这样this就与外面btn监听函数内this指向相同(btn)
+btn.addEventListener('click', function () {
+    this.disabled = true;
+    setTimeout(() => {
+        this.disabled = false;
+    }, 2000);
+});
+（2）改变定时器内函数的this指向
+btn.addEventListener('click', function () {
+    this.disabled = true;
+    setTimeout(function () {
+        this.disabled = false;
+    }.bind(this), 2000); //bind(this)里的this就是监听函数的this--btn
+});
+注意：因为箭头函数没有自己的this，所以不能使用这些方法改变箭头函数内的this指向，因此上面例子中btn.addEventListener('click',function(){})如果还想用this就不能使用箭头函数代替function(){}，因为这样this永远指向window，不可更改
+
+
+防抖：单位时间内，频繁触发事件，只执行最后1次。比如一个事件要执行3s，还没执行完，就又触发了一次，则第一次执行立即取消，开始第二次从头执行
+使用场景：搜索框输入，只需用户最后一次输入完再发送请求；手机号等验证格式，输入完了再检查
+例：鼠标在盒子内移动，里面数字变化+1；如果不作处理，鼠标移动1px数字就要加1，会消耗大量性能
+可以这样改进：鼠标移动，当鼠标停止500ms后，里面数字才会+1
+（1）使用lodash库：_.debounce(func,[wait=0],[options=]) 它可以作为事件监听的回调函数使用，表示从上一次执行后，延迟wait毫秒后再调用func
+const box = document.querySelector('.box');
+let num = 1;
+const change_num = () => { box.innerHTML = num++; };
+box.addEventListener('mousemove', _.debounce(change_num, 500));
+（2）自行实现：核心是使用setTimeout定时器。当鼠标滑动时先判断是否有定时器，如果有就清除再开启；没有就直接开启，并在定时器内调用要执行的函数（因为setTimeout是先等待再执行）
+const box = document.querySelector('.box');
+let num = 1;
+const change_num = () => { box.innerHTML = num++; };
+const debounce = (func, wait = 0) => {
+    let timer; //定时器变量
+    return () => {
+        if (timer) clearTimeout(timer); //如果有就清除
+        timer = setTimeout(func, wait); //调用函数，给timer赋值
+    };
+};
+box.addEventListener('mousemove', debounce(change_num, 500));
+为什么debounce函数里面要将具体实现的函数返回：
+不做防抖时：box.addEventListener('mousemove', change_num)，addEventListener会在鼠标移动时执行change_num函数；而我们希望为防抖函数提供参数以适用更多情况，于是写box.addEventListener('mousemove', debounce(change_num, 500))；区别在于，change_num是函数名，而debounce(change_num, 500)表示调用debounce这个函数，debounce(change_num, 500)===它的返回值；如果不返回函数，就只会在第一次移动时执行一次debounce(change_num, 500)以获取它的返回值，获取到返回值后，浏览器便会将它的返回值代替debounce(change_num, 500)，即box.addEventListener('mousemove',null))；因此，返回的必须是一个函数，能让addEventListener不停地调用
+同时，函数中返回函数也运用了闭包，timer就是外层函数的变量，只创建一次，避免了重复创建timer 导致无法通过 根据timer有无值判断是否有定时器 的问题；而内层函数（返回值函数）可以一直访问到timer变量
+
+节流：单位时间内，频繁触发事件，只执行一次。即当事件第一次被触发后，在执行过程中，如果又触发，就不会执行新触发的事件，等到第一次执行完后再允许触发
+使用场景：鼠标移动、页面尺寸改变、滚动事件
+例：鼠标在盒子上移动，不管移动多少次，每隔500ms才+1
+（1）使用lodash库：_.throttle(func,[wait=0],[options=]) 它可以作为事件监听的回调函数使用，表示在wait毫秒之内最多执行一次func
+const box = document.querySelector('.box');
+let num = 1;
+const change_num = () => { box.innerHTML = num++; };
+box.addEventListener('mousemove', _.throttle(change_num, 500));
+（2）自行实现：核心是使用setTimeout定时器。当鼠标滑动时先判断是否有定时器，如果有则不开启新定时器；如果没有就开启，并在最后清除开启的定时器
+const box = document.querySelector('.box');
+let num = 1;
+const change_num = () => { box.innerHTML = num++; };
+const throttle = (func, wait = 0) => {
+    let timer; //定时器变量
+    return () => {
+        if (!timer) { //没有定时器
+            timer = setTimeout(() => {
+                func();  //执行函数
+                timer = null; //清除定时器
+                clearTimeout(timer)
+            }, wait);
+        }
+    };
+};
+box.addEventListener('mousemove', throttle(change_num, 500));
+为什么不用clearTimeout(timer)清除定时器：在setTimeout函数内是无法删除定时器的，因为此时定时器还在运作。所以使用timer=null，表示定时器函数已执行完毕，程序中不存在有定时器

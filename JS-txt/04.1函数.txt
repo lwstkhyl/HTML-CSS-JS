@@ -1,0 +1,82 @@
+函数也是一个对象
+var func = new Function("console.log('调用函数');") //创建函数对象，将要封装的代码以字符串的形式传递给构造函数
+function func() //创建名为func的函数（是更常用的方式）
+{
+    console.log("调用函数");
+}
+var func = function() //也可以（通过给匿名函数起名）
+{
+    console.log("调用函数");
+} //因为是赋值语句，最好加上分号
+func(); //调用函数，执行函数内的代码
+
+传递形参：function func(a,b){} a和b可以是任意的数据类型。在调用函数传参时，不会检查实参的类型和数量（多余的实参会被忽略，少的形参会是undefined）
+当参数过多时，可将参数封装到一个对象中并传递给函数，然后通过对象属性进行引用
+函数也可以作为参数进行传递
+function func(a) {
+    a("func");
+}
+function outer_func(content) {
+    console.log(content);
+}
+func(outer_func); //相当于outer_func("func");即console.log("func");
+返回值：return; 和 return undefined;和不写return语句都是返回undefined。return后面的语句不会被执行
+函数的内部可以再声明函数，函数对象也可作为返回值
+
+匿名函数：函数定义完，立即被调用，这类立即执行函数往往只执行一次
+function(){alert("匿名函数");} //这样写会报错，需在两边加上括号来进行标识
+(function(){alert("匿名函数");})  //正确写法
+(function(){alert("匿名函数");})();  //调用匿名函数
+(function(a,b){console.log(a+b);})(10,20);  //还可以传递参数
+
+解析器每次在调用函数时都会向函数内部传进一个隐含的参数this，它指向一个对象，称为函数指向的上下文对象；在函数中可以直接使用this
+根据函数调用方式不同，this会指向不同的对象。以函数形式调用时，this永远是window；以方法的形式调用时，this就是调用方法的对象；可以说，谁调用了这个函数，this就是谁
+var name = "全局";
+function say_name() {
+    console.log(this.name);
+}
+var obj1 = {
+    name: "obj1",
+    say_name: say_name
+}
+var obj2 = {
+    name: "obj2",
+    say_name: say_name
+}
+say_name(); //"全局"
+obj1.say_name(); //"obj1"
+obj2.say_name(); //"obj2"
+
+
+函数的call()和apply()方法：可以改变函数中this指向
+function func() {
+    alert(this);
+}
+func(); //[object Window]
+obj = {};
+func.apply(obj); //[object Object]
+func.call(obj); //[object Object]
+对于有参数的函数：call()可以将实参放在对象之后依次传入函数，而apply()需要将实参放到一个数组中统一传递
+function func(key1, key2) {
+    console.log(key1 + ":" + this[key1]);
+    console.log(key2 + ":" + this[key2]);
+}
+obj = { name: "abc", age: 20 };
+func.call(obj, "name", "age");  //name:abc    age:20
+func.apply(obj, ["name", "age"]);   //name:abc    age:20
+
+函数调用时，浏览器除了this，还好传递进一个隐含的参数arguments，用于封装实参；它是一个类数组对象，不是数组，但也可以通过索引来操作数据并获取长度；在调用函数时，传递进的实参逗号在arguments中保存；即使不定义形参，也可以通过它来使用传进来的实参
+function func() {
+    console.log(arguments[0]);
+    console.log(arguments[2]);
+    console.log(arguments.length);
+}
+func(0, 1, 2);  //0  2  3
+arguments的callee属性：是正在执行的函数对象
+function func() {
+    console.log(arguments.callee);
+}
+func();  //ƒ func() {console.log(arguments.callee);}
+
+自执行函数：将一段程序封装进一个会自动执行的匿名函数，防止变量污染
+语法：(function(){/*程序段*/})();

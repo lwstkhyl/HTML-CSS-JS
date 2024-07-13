@@ -1,0 +1,14 @@
+.code-copy {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 58px;
+    height: 26px;
+    background-color: #9999AA;
+    color: #ffffff;
+    font-size: 18px;
+    line-height: 26px;
+    text-align: center;
+    border-radius: 4px;
+    cursor: pointer;
+}
